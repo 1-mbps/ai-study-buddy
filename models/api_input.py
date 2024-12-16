@@ -19,9 +19,11 @@ class IncomingFile(BaseModel):
     def parse_file_content(self) -> List[str]:
         if self.content_type != "application/pdf":
             raise HTTPException(status_code=400, detail="Please upload a valid PDF.")
-        
-        content = base64.b64decode(self.content)
-
+        try:
+            content = base64.b64decode(self.content)
+        except Exception as e:
+            print(e)
+            raise HTTPException(status_code=500, detail="Error decoding PDF.")
         if len(content) > MAX_SIZE:
             raise HTTPException(status_code=400, detail="Files must not exceed 5MB.")
         try:
@@ -29,23 +31,24 @@ class IncomingFile(BaseModel):
             pdf_content = read_pdf(content_bytes)
             return pdf_content
         except Exception:
-            raise HTTPException(status_code=500, detail="Unspecified error in parsing PDF. Please try again later.")
-            
+            raise HTTPException(status_code=500, detail="Unspecified error in parsing PDF. Please try again later.")    
 
 class SessionRequest(BaseModel):
     file: IncomingFile
-    start_page: Optional[int] = 1
-    end_page: Optional[int] = -1
     _pages: List[str] = PrivateAttr(default=None)
 
     @model_validator(mode='after')
     def parse_file(self) -> Self:
         self._pages = self.file.parse_file_content()
+        return self
 
     def get_pages(self) -> List[str]:
         return self._pages
     
+    def get_file_name(self) -> str:
+        return self.file.filename
+    
 class QuestionRequest(BaseModel):
     session_id: str
-    start_page: Optional[int] = 1
+    start_page: Optional[int] = 0
     end_page: Optional[int] = -1
