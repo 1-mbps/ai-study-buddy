@@ -45,12 +45,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    # expose_headers=["*"]
 )
-
-# if end_page == -1:
-#     end_page = 99999
-# if end_page < start_page:
-#     raise HTTPException(status_code=400, detail="End page must be greater than or equal to start page.")
 
     
